@@ -1,0 +1,22 @@
+<table id ="monster-table">
+    <thread>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Elements</th>
+        </tr>
+    </thread>
+    <tbody></tbody>
+</table>
+
+<script>
+    fetch('script.json')
+        .then(resposne => response.json())
+        .then(data => {
+            //.......json data......//
+            eval(data.script);
+        })
+        .catch(error => {
+            console.error('Error loading script:', error);
+        });
+</script>
