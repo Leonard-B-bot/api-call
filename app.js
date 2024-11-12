@@ -1,63 +1,74 @@
-// Base API URL
-const apiUrl = 'https://mhw-db.com/monsters';
-const monsterTable = document.getElementById('monster-tbody');
-const nextBtn = document.getElementById('next-btn');
-const prevBtn = document.getElementById('prev-btn');
+document.addEventListener('DOMContentLoaded', function() {
+  // API URL for Monster Hunter World monsters
+  const apiUrl = 'https://mhw-db.com/monsters';
+  const itemsPerPage = 10; // Number of monsters per page
+  let monsters = []; // Array to store monsters
+  let currentPage = 1; // Current page
 
-let currentPage = 1;
-const itemsPerPage = 10; // Items per page
-let monsters = []; // To store fetched monsters
+  // DOM elements
+  const prevBtn = document.getElementById('prev-btn');
+  const nextBtn = document.getElementById('next-btn');
+  const monsterTable = document.getElementById('monster-table-body');
 
-// Fetch monsters from API
-async function fetchMonsters(page = 1) {
-  try {
-    const response = await fetch(apiUrl);
-    if (!response.ok) throw new Error(`API error: ${response.statusText}`);
-    monsters = await response.json();
-    displayMonsters(page);
-  } catch (error) {
-    console.error(error.message);
+  // Ensure pagination buttons exist before adding event listeners
+  if (prevBtn && nextBtn) {
+    prevBtn.addEventListener('click', () => handlePageChange(-1));
+    nextBtn.addEventListener('click', () => handlePageChange(1));
+  } else {
+    console.error("Pagination buttons not found in the DOM");
   }
-}
 
-// Display monsters in table
-function displayMonsters(page) {
-  const startIndex = (page - 1) * itemsPerPage;
-  const paginatedMonsters = monsters.slice(startIndex, startIndex + itemsPerPage);
-  monsterTable.innerHTML = ''; // Clear table
+  // Function to fetch monsters from the API
+  async function fetchMonsters() {
+    try {
+      const response = await fetch(apiUrl);
+      if (!response.ok) throw new Error(`API error: ${response.statusText}`);
 
-  paginatedMonsters.forEach(monster => {
-    const row = document.createElement('tr');
-    row.innerHTML = `
-      <td class="border px-4 py-2">${monster.id}</td>
-      <td class="border px-4 py-2">${monster.name}</td>
-      <td class="border px-4 py-2">${monster.type}</td>
-      <td class="border px-4 py-2"><button class="bg-green-500 text-white px-2 py-1 rounded" onclick="showMonsterDetails(${monster.id})">Details</button></td>
-    `;
-    monsterTable.appendChild(row);
-  });
+      monsters = await response.json();
+      console.log('Fetched monsters:', monsters); // Log the fetched data
 
-  // Disable/Enable buttons based on pagination
-  prevBtn.disabled = page === 1;
-  nextBtn.disabled = startIndex + itemsPerPage >= monsters.length;
-}
+      displayMonsters(currentPage);
+    } catch (error) {
+      monsterTable.innerHTML = `<tr><td colspan="4" class="text-red-500 text-center">Failed to load monsters. Try again later.</td></tr>`;
+      console.error('Fetch error:', error.message);
+    }
+  }
 
-// Show monster details (For now just console log the ID)
-function showMonsterDetails(id) {
-  const monster = monsters.find(monster => monster.id === id);
-  console.log(monster);
-}
+  // Function to display monsters in the table
+  function displayMonsters(page) {
+    const startIndex = (page - 1) * itemsPerPage;
+    const paginatedMonsters = monsters.slice(startIndex, startIndex + itemsPerPage);
 
-// Handle next/previous buttons
-nextBtn.addEventListener('click', () => {
-  currentPage++;
-  displayMonsters(currentPage);
+    console.log('Paginated monsters:', paginatedMonsters); // Log paginated monsters
+
+    // Clear the table
+    monsterTable.innerHTML = '';
+
+    // Display each monster in the table
+    paginatedMonsters.forEach(monster => {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td class="border px-4 py-2">${monster.id}</td>
+        <td class="border px-4 py-2">${monster.name}</td>
+        <td class="border px-4 py-2">${monster.type}</td>
+        <td class="border px-4 py-2">
+          <button class="bg-green-500 text-white px-2 py-1 rounded" onclick="showMonsterDetails(${monster.id})">Details</button>
+        </td>
+      `;
+      monsterTable.appendChild(row);
+    });
+
+    // Disable/Enable buttons based on pagination
+    prevBtn.disabled = page === 1;
+    nextBtn.disabled = startIndex + itemsPerPage >= monsters.length;
+  }
+
+  // Function to handle page change
+  function handlePageChange(direction) {
+    currentPage += direction;
+    displayMonsters(currentPage);
+  }
+
+  // Fetch the initial set of monsters
+  fetchMonsters();
 });
-
-prevBtn.addEventListener('click', () => {
-  currentPage--;
-  displayMonsters(currentPage);
-});
-
-// Initial fetch
-fetchMonsters();
